@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="xonro">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/xonro/out/artifacts/artifacts/xonro/xonro.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/xonro/out/artifacts/artifacts/xonro/xonro.jar!/" />
+    </SOURCES>
+  </library>
+</component>

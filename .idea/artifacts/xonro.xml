@@ -1,0 +1,12 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="xonro">
+    <output-path>$PROJECT_DIR$/xonro/out/artifacts/artifacts/xonro</output-path>
+    <root id="archive" name="xonro.jar">
+      <element id="module-output" name="xonro" />
+      <element id="module-source" name="xonro" />
+      <element id="directory" name="META-INF">
+        <element id="file-copy" path="$PROJECT_DIR$/xonro/META-INF/MANIFEST.MF" />
+      </element>
+    </root>
+  </artifact>
+</component>
