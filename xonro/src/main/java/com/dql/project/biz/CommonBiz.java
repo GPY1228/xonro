@@ -54,4 +54,20 @@ public class CommonBiz {
         BOCopyAPI copyAPI = query.copyTo("BO_XR_FM_COST", processInstance.getId());
         return copyAPI;
     }
+
+    /**
+     * 费用工资台帐
+     * @param boName
+     * @param boId
+     * @return
+     */
+    public static BOCopyAPI salaryPayInfo(String boName,String boId){
+        //创建任务分配流程
+        ProcessInstance processInstance= SDK.getProcessAPI().createProcessInstance( "obj_59e21005ef9b445093924585db94c41a","admin","费用成本明细管理");
+        //指定将要复制到新的bo表以及流程实例ID
+        BOQueryAPI query = SDK.getBOAPI().query(boName, true).addQuery("ID=", boId);
+        //档案表
+        BOCopyAPI copyAPI = query.copyTo("BO_XR_FM_SALARY", processInstance.getId());
+        return copyAPI;
+    }
 }

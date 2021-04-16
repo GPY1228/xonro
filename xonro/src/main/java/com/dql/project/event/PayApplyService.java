@@ -32,6 +32,9 @@ public class PayApplyService extends ServiceDelegate {
         //客户名称
         String customerName = fmExpense.getString("CUSTOMER_NAME");
         String customerCode = fmExpense.getString("CUSTOMER_CODE");
+        //项目名称。编号
+        String projectCode = fmExpense.getString("PROJECT_CODE");
+        String projectName = fmExpense.getString("PROJECT_NAME");
 
         //申请人
         String userName = fmExpense.getString("USER_NAME");
@@ -40,13 +43,13 @@ public class PayApplyService extends ServiceDelegate {
 
         //项目名称/编号
         String isOpen = "1";
-        String projectCode = "";
-        String projectName = "";
-        BO pmProject = SDK.getBOAPI().query("BO_XR_PM_PROJECT").addQuery("CUSTOMER_CODE=", customerCode).detail();
+        String customName = "";
+
+        //查找项目档案-项目信息
+        BO pmProject = SDK.getBOAPI().query("BO_XR_PM_PROJECT").addQuery("PROJECT_NAME=", projectName).detail();
         if(pmProject != null){
             isOpen = pmProject.getString("IS_OPEN");
-            projectName = pmProject.getString("PROJECT_NAME");
-            projectCode = pmProject.getString("PROJECT_CODE");
+            customName = pmProject.getString("CUSTOMER_NAME");
         }
 
         //核算费用科目
@@ -89,7 +92,9 @@ public class PayApplyService extends ServiceDelegate {
         copyAPI.addNewData( "SUBJECT_TWO",subjectTwo);
         copyAPI.addNewData( "SUBJECT_THREE",subjectThree);
         //费用支付方
-        copyAPI.addNewData( "CUSTOMER_NAME",customerName);
+        copyAPI.addNewData( "CUSTOMER_NAME",customName);
+        //费用金额
+        copyAPI.addNewData( "AMOUNT",payAmount);
         //支付状态
         copyAPI.addNewData( "FLAG","1");
         //是否公开
