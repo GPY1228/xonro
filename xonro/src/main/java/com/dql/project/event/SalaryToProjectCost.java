@@ -4,11 +4,14 @@ import com.actionsoft.bpms.bo.engine.BO;
 import com.actionsoft.bpms.bpmn.engine.core.delegate.ProcessExecutionContext;
 import com.actionsoft.bpms.bpmn.engine.listener.ExecuteListener;
 import com.actionsoft.bpms.bpmn.engine.listener.ExecuteListenerInterface;
+import com.actionsoft.bpms.bpmn.engine.model.run.delegate.ProcessInstance;
 import com.actionsoft.bpms.commons.database.RowMap;
 import com.actionsoft.bpms.util.DBSql;
+import com.actionsoft.bpms.util.UtilDate;
 import com.actionsoft.sdk.local.SDK;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -25,67 +28,77 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
     @Override
     public void execute(ProcessExecutionContext processExecutionContext) throws Exception {
         String bindId = processExecutionContext.getProcessInstance().getId();
-        String selectSalary = " SELECT s.*,p.YEAR,p.`MONTH`,p.BINDID,p.APPLY_NO FROM BO_XR_FM_SALARY_SHEET s left join BO_XR_FM_SALARY_PAY p on s.BINDID = p.BINDID WHERE s.BINDID = '"+bindId+"' ";
+        String selectSalary = " SELECT s.*,p.YEAR,p.`MONTH`,p.BINDID,p.APPLY_NO,p.UPDATEDATE payDate FROM BO_XR_FM_SALARY_SHEET s left join BO_XR_FM_SALARY_PAY p on s.BINDID = p.BINDID WHERE s.BINDID = '"+bindId+"' ";
         List<RowMap> getUsersSalaryLists = DBSql.getMaps(selectSalary);
         getUsersSalaryLists.forEach(getUsersSalaryList->{
             String amount = "";
-            String year = getUsersSalaryList.getString("YEAR");
-            String month = getUsersSalaryList.getString("MONTH");
+
+            //支付日期
+            String payDate = getUsersSalaryList.getString("payDate");
+            //申请时间
+            Date date = UtilDate.parse(payDate);
+            String year = String.valueOf(UtilDate.getYear(date));
+            String month = String.valueOf(UtilDate.getMonth(date));
             String userId = getUsersSalaryList.getString("USER_ID");
             String userName = getUsersSalaryList.getString("USER_NAME");
             String applyNo = getUsersSalaryList.getString("APPLY_NO"); //申请单号
             //String bindId = getUsersSalaryList.getString("BINDID");
 
             amount = getUsersSalaryList.getString("SUBSIDY_TXF");//补助-通讯费
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SUBSIDY_TXF","补助-通讯费");
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SUBSIDY_TXF","补助-通讯费",payDate);
             }
             amount = getUsersSalaryList.getString("SUBSIDY_WC");//补助-午餐费
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SUBSIDY_WC","补助-午餐费");
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SUBSIDY_WC","补助-午餐费",payDate);
             }
             amount = getUsersSalaryList.getString("SUBSIDY_BJB");//补助-笔记本
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SUBSIDY_BJB","补助-笔记本");
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SUBSIDY_BJB","补助-笔记本",payDate);
             }
             amount = getUsersSalaryList.getString("SUBSIDY_QQ");//补助-全勤
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SUBSIDY_QQ","补助-全勤");
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SUBSIDY_QQ","补助-全勤",payDate);
             }
             amount = getUsersSalaryList.getString("BONUS");//奖金
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"BONUS","奖金");
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"BONUS","奖金",payDate);
             }
             amount = getUsersSalaryList.getString("SOCIAL_SECURITY_C");//社保公司部分
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SOCIAL_SECURITY_C","社保公司部分");
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SOCIAL_SECURITY_C","社保公司部分",payDate);
             }
             amount = getUsersSalaryList.getString("SURPLUS_C");//公积金_公司部分
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SURPLUS_C","公积金_公司部分");
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SURPLUS_C","公积金_公司部分",payDate);
             }
             amount = getUsersSalaryList.getString("EXTRA_SURPLUS");//补充公积金
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"EXTRA_SURPLUS","补充公积金");
+            System.out.println("amount:"+amount);
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"EXTRA_SURPLUS","补充公积金",payDate);
             }
             amount = getUsersSalaryList.getString("SALARY_SQ");//税前工资
-            if (!amount.equals("0")||amount!=null){
-                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SALARY_SQ","税前工资");
+            amount = String.valueOf(Double.valueOf(amount) - Double.valueOf(getUsersSalaryList.getString("DEDUCT_AMOUNT")));//税前工资-应扣金额
+            if (!amount.equals("0.00")){
+                createBo_Xr_Fm_Cost(processExecutionContext,year,month,userId,userName,amount,bindId,applyNo,"SALARY_SQ","税前工资-应扣金额",payDate);
             }
             //amount = getUsersSalaryList.getString("DEDUCT_AMOUNT");//应扣工资
         });
     }
 
     //创建项目费用明细实体类
-    public void createBo_Xr_Fm_Cost(ProcessExecutionContext processExecutionContext,String year,String month,String userId,String userName,String amount,String bindId,String applyNo,String code,String codeName) {
+    public void createBo_Xr_Fm_Cost(ProcessExecutionContext processExecutionContext,String year,String month,String userId,String userName,String amount,String bindId,String applyNo,String code,String codeName,String payDate) {
         String processId =  processExecutionContext.getProcessInstance().getProcessDefId();
         String appId = processExecutionContext.getProcessDef().getAppId();
         BO bo = new BO();
+
         bo.set("YEAR",year);
         bo.set("MONTH",month);
         bo.set("USER_ID",userId);
         bo.set("USER_NAME",userName);
-        bo.set("BINDID",bindId);
+        //创建任务分配流程
+        ProcessInstance processInstance= SDK.getProcessAPI().createProcessInstance( "obj_c6241dc677b244df90e53d01da829b2f","admin","费用成本明细管理");
+        bo.set("BINDID",processInstance.getId());
 
         bo.set("CUSTOMER_NAME",processExecutionContext.getVariable("CUSTOMER_NAME"));
         bo.set("PROJECT_CODE","DQL-XM-202103-07");
@@ -107,7 +120,6 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
         if (getUsersSalaryLists!=null && getUsersSalaryLists.size()>0){
             subjectCode = getUsersSalaryLists.get(0).getString("SUBJECT_CODE");
         }
-        System.out.println("subjectCode: " + subjectCode);
         String subjectOne = "";
         String subjectTwo = "";
         String subjectThree = "";
@@ -129,6 +141,7 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
         bo.set("SUBJECT_ONE",subjectOne);
         bo.set("SUBJECT_TWO",subjectTwo);
         bo.set("SUBJECT_THREE",subjectThree);
+        bo.set("PAY_DATE",payDate);
         SDK.getBOAPI().create("BO_XR_FM_COST",bo,"","");
 
     }
