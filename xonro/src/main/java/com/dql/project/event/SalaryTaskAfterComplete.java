@@ -26,7 +26,8 @@ public class SalaryTaskAfterComplete extends ExecuteListener implements ExecuteL
 
     @Override
     public void execute(ProcessExecutionContext processExecutionContext) throws Exception {
-        String selectSalary = " SELECT s.*,p.YEAR,p.`MONTH` FROM BO_XR_FM_SALARY_SHEET s left join BO_XR_FM_SALARY_PAY p on s.BINDID = p.BINDID  ";
+        String bindId = processExecutionContext.getProcessInstance().getId();
+        String selectSalary = " SELECT s.*,p.YEAR,p.`MONTH` FROM BO_XR_FM_SALARY_SHEET s left join BO_XR_FM_SALARY_PAY p on s.BINDID = p.BINDID WHERE s.BINDID = '"+bindId+"' ";
         List<RowMap> getUsersSalaryLists = DBSql.getMaps(selectSalary);
         getUsersSalaryLists.forEach(s->{
             BO bo = new BO();
