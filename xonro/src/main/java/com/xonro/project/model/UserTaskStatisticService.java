@@ -22,7 +22,7 @@ public class UserTaskStatisticService {
     }
 
     public List<RowMap> getOrgUsersList(String daptId){
-        String sql = " SELECT USERID,USERNAME,USERNO FROM orguser ";
+        String sql = " SELECT USERID,USERNAME,USERNO FROM orguser where EXT5 = 1";
         List<RowMap> getOrgUsersList = DBSql.getMaps(sql);
         return getOrgUsersList;
     }
