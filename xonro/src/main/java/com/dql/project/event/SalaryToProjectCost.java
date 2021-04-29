@@ -9,6 +9,7 @@ import com.actionsoft.bpms.commons.database.RowMap;
 import com.actionsoft.bpms.util.DBSql;
 import com.actionsoft.bpms.util.UtilDate;
 import com.actionsoft.sdk.local.SDK;
+import com.xonro.project.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
@@ -28,7 +29,7 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
     @Override
     public void execute(ProcessExecutionContext processExecutionContext) throws Exception {
         String bindId = processExecutionContext.getProcessInstance().getId();
-        String selectSalary = " SELECT s.*,p.YEAR,p.`MONTH`,p.BINDID,p.APPLY_NO,p.UPDATEDATE payDate FROM BO_XR_FM_SALARY_SHEET s left join BO_XR_FM_SALARY_PAY p on s.BINDID = p.BINDID WHERE s.BINDID = '"+bindId+"' ";
+        String selectSalary = " SELECT s.*,p.YEAR,p.`MONTH`,p.BINDID,p.APPLY_NO,p.PAY_DATE payDate FROM BO_XR_FM_SALARY_SHEET s left join BO_XR_FM_SALARY_PAY p on s.BINDID = p.BINDID WHERE s.BINDID = '"+bindId+"' ";
         List<RowMap> getUsersSalaryLists = DBSql.getMaps(selectSalary);
         getUsersSalaryLists.forEach(getUsersSalaryList->{
             String amount = "";
@@ -36,9 +37,8 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
             //支付日期
             String payDate = getUsersSalaryList.getString("payDate");
             //申请时间
-            Date date = UtilDate.parse(payDate);
-            String year = String.valueOf(UtilDate.getYear(date));
-            String month = String.valueOf(UtilDate.getMonth(date));
+            String year = getUsersSalaryList.getString("YEAR");
+            String month = getUsersSalaryList.getString("MONTH");
             String userId = getUsersSalaryList.getString("USER_ID");
             String userName = getUsersSalaryList.getString("USER_NAME");
             String applyNo = getUsersSalaryList.getString("APPLY_NO"); //申请单号
@@ -90,6 +90,7 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
     public void createBo_Xr_Fm_Cost(ProcessExecutionContext processExecutionContext,String year,String month,String userId,String userName,String amount,String bindId,String applyNo,String code,String codeName,String payDate) {
         String processId =  processExecutionContext.getProcessInstance().getProcessDefId();
         String appId = processExecutionContext.getProcessDef().getAppId();
+
         BO bo = new BO();
 
         bo.set("YEAR",year);
@@ -101,8 +102,8 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
         bo.set("BINDID",processInstance.getId());
 
         bo.set("CUSTOMER_NAME",processExecutionContext.getVariable("CUSTOMER_NAME"));
-        bo.set("PROJECT_CODE","DQL-XM-202103-07");
-        bo.set("PROJECT_NAME","2021公司内部建设");
+        bo.set("PROJECT_CODE",processExecutionContext.getVariable("PROJECT_CODE"));
+        bo.set("PROJECT_NAME",processExecutionContext.getVariable("PROJECT_NAME"));
 
         bo.set("IS_OPEN","0");
         bo.set("REASON",codeName);
@@ -112,7 +113,7 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
         bo.set("REMARK","来源于admin提交的【"+applyNo+"】工资发放流程，员工名称【"+userName+"】，支付费用【"+codeName+"】");
 
         //通过工资发放明细字段查找对应3级科目bo_xr_subject_pz_list
-        String selectSalary = " SELECT FIELD_NAME,SUBJECT_CODE,SUBJECT_NAME FROM bo_xr_subject_pz p left join  bo_xr_subject_pz_list l on p.PROCESSDEFID = l.PROCESSDEFID where FIELD_NAME = '"+code+"' and p.PROCESSDEFID = '"+processId+"' ";
+        String selectSalary = " SELECT FIELD_NAME,SUBJECT_CODE,SUBJECT_NAME FROM bo_xr_subject_pz p left join  bo_xr_subject_pz_list l on p.PROCESSDEFID = l.PROCESSDEFID where FIELD_NAME = '"+code+"' and p.PROCESS_UUID = '"+processId+"' ";
         List<RowMap> getUsersSalaryLists = DBSql.getMaps(selectSalary);
 
         //核算费用科目
@@ -120,6 +121,7 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
         if (getUsersSalaryLists!=null && getUsersSalaryLists.size()>0){
             subjectCode = getUsersSalaryLists.get(0).getString("SUBJECT_CODE");
         }
+        System.out.println("subjectCode："+subjectCode);
         String subjectOne = "";
         String subjectTwo = "";
         String subjectThree = "";
@@ -142,7 +144,7 @@ public class SalaryToProjectCost extends ExecuteListener implements ExecuteListe
         bo.set("SUBJECT_TWO",subjectTwo);
         bo.set("SUBJECT_THREE",subjectThree);
         bo.set("PAY_DATE",payDate);
-        SDK.getBOAPI().create("BO_XR_FM_COST",bo,"","");
+        SDK.getBOAPI().create("BO_XR_FM_COST",bo,processInstance.getId(),"");
 
     }
 

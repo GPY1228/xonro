@@ -39,6 +39,7 @@ public class ProjectStatisticalJob implements Job {
             //1、工作时长求和：该人员工作时长流水之和;(根据人员分组)
             String sumPopHuorsSql = "select USER_ID,sum(WORK_HOURS) as workHours from BO_XR_PM_TIME_COST where PROJECT_CODE = '" + projectCode + "' and IS_OVERTIME = 0 group by USER_ID";
             List<RowMap> popHours = DBSql.getMaps(sumPopHuorsSql);
+            System.out.println("需更新总长度:"+popHours.size());
             popHours.forEach(popHour -> {
                 //2、时长占比：个人累计时长除以团队正常总时长
                 Double workHours = Double.valueOf(popHour.getString("workHours").toString());
@@ -46,16 +47,18 @@ public class ProjectStatisticalJob implements Job {
                 //3、实际天数：个人部分实际天数总时长。
                 Double popDays = workHours / 8;
                 //4、差额：计划天数-实际天数。如果是负数，则显示负数
-                Double planDays = Double.valueOf(orgUser.getString("PLAN_DAYS"));
-                Double balance = (planDays - popDays)/8;
-                BO projectMember = SDK.getBOAPI().query("BO_XR_PM_PROJECT_MEMBER").addQuery("USER_ID=", popHour.getString("USER_ID")).detail();
+                //Double planDays = Double.valueOf(orgUser.getString("PLAN_DAYS"));
+                //Double balance = planDays - popDays;
+                System.out.println("实际天数："+popDays);
+                BO projectMember = SDK.getBOAPI().query("BO_XR_PM_PROJECT_MEMBER").addQuery("USER_ID=", popHour.getString("USER_ID")).addQuery("PROJECT_CODE=",projectCode).detail();
                 if (projectMember != null) {
-                    popratio = Double.valueOf(Math.round(popratio * 100));
+                    Double planDays = Double.valueOf(projectMember.getString("PLAN_DAYS"));
                     projectMember.set("WORK_HOURS",workHours);
-                    projectMember.set("WORK_RATIO", popratio + "%");
-                    projectMember.set("MARGIN", String.format("%.2f", balance));
+                    projectMember.set("WORK_RATIO", String.format("%.2f", popratio*100) + "%");
+                    projectMember.set("MARGIN", String.format("%.2f", planDays-popDays));
                     projectMember.set("ACTUAL_DAYS",String.format("%.2f", popDays));
-                    SDK.getBOAPI().update("BO_XR_PM_PROJECT_MEMBER", projectMember);
+                    int r = SDK.getBOAPI().update("BO_XR_PM_PROJECT_MEMBER", projectMember);
+                    System.out.println("更新结果："+"更新人："+popHour.getString("USER_ID")+r);
                 }
             });
             //（二）更新子表数据再查询加班时长
@@ -75,9 +78,9 @@ public class ProjectStatisticalJob implements Job {
                 Double popOverHours = Double.valueOf(popOverTime.get("workHours").toString());
                 //加班时长：个人累计加班时长占团队加班时长总合
                 Double overRatio = popOverHours / finalSumWorkHours;
-                BO projectMember = SDK.getBOAPI().query("BO_XR_PM_PROJECT_MEMBER").addQuery("USER_ID=", popOverTime.getString("USER_ID")).detail();
+                BO projectMember = SDK.getBOAPI().query("BO_XR_PM_PROJECT_MEMBER").addQuery("USER_ID=", popOverTime.getString("USER_ID")).addQuery("PROJECT_CODE=",projectCode).detail();
                 if (projectMember != null) {
-                    projectMember.set("OVER_RATIO",String.format("%.2f", overRatio));
+                    projectMember.set("OVER_RATIO",String.format("%.2f", overRatio*100)+"%");
                     projectMember.set("OVER_HOURS", popOverHours);
                     SDK.getBOAPI().update("BO_XR_PM_PROJECT_MEMBER", projectMember);
                 }
