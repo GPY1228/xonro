@@ -1,18 +1,15 @@
 package com.xonro.project.controller;
 
 import com.actionsoft.bpms.commons.database.RowMap;
-import com.actionsoft.bpms.commons.htmlframework.HtmlPageTemplate;
 import com.actionsoft.bpms.server.UserContext;
 import com.actionsoft.bpms.server.bind.annotation.Controller;
 import com.actionsoft.bpms.server.bind.annotation.Mapping;
-import com.actionsoft.bpms.util.DBSql;
 import com.alibaba.fastjson.JSON;
 import com.xonro.project.bean.UserTaskList;
 import com.xonro.project.bean.UserWeekTaskList;
 import com.xonro.project.model.UserTaskStatisticService;
 import com.xonro.project.util.DateUtil;
 
-import java.text.ParseException;
 import java.util.*;
 
 /**
@@ -23,8 +20,8 @@ import java.util.*;
 @Controller
 public class UserTaskStatisticController {
 
-    @Mapping(value ="pm.controller.userTaskStatistic",session = false,noSessionEvaluate = "",noSessionReason = "")
-    public List<UserTaskList> userTaskStatistic(UserContext me, String departId,String year,int weekly){
+    @Mapping(value ="pm.controller.userTaskStatistic")  //,session = false,noSessionEvaluate = "",noSessionReason = ""
+    public String userTaskStatistic(UserContext me, String departId, String year, int weekly){
         String beginTime = DateUtil.formatDate(DateUtil.getYearWeeklyDay(2021, 15, 2));
         String endTime = DateUtil.formatDate(DateUtil.getYearWeeklyDay(2021, 16, 1));
 
@@ -121,7 +118,7 @@ public class UserTaskStatisticController {
 
         String userTaskListsJson = JSON.toJSONString(userTaskLists);
 
-        return userTaskLists;
+        return userTaskListsJson;
     }
 
     public static void main(String[] args) {
